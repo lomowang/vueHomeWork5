@@ -19,8 +19,10 @@
         <div class="mt-4">
           <!-- 產品Modal -->
 
-          <product-modal :id="productId"
-            ref="productModal">
+          <product-modal 
+            :id="productId"
+            ref="productModal"
+            @add-Cart="addToCart">
 
           </product-modal>
           
@@ -59,12 +61,17 @@
                 <td>
                   <div class="btn-group btn-group-sm">
                     <button type="button" class="btn btn-outline-secondary"
-                      @click="openProductModal(product.id)">
-                      <i class="fas fa-spinner fa-pulse"></i>
+                      @click="openProductModal(product.id)"
+                        :disable="isLoadingItem === product.id"
+                      >
                       查看更多
                     </button>
-                    <button type="button" class="btn btn-outline-danger">
-                      <i class="fas fa-spinner fa-pulse"></i>
+                    <button type="button" class="btn btn-outline-danger"
+                      @click="addToCart(product.id)">
+
+                      <!-- 加上讀取效果 -->
+                      <span class="fas fa-spinner fa-pulse"
+                      v-show="isLoadingItem === product.id"></span>
                       加到購物車
                     </button>
                   </div>
@@ -74,7 +81,13 @@
           </table>
           <!-- 購物車列表 -->
           <div class="text-end">
-            <button class="btn btn-outline-danger" type="button">清空購物車</button>
+            <button class="btn btn-outline-danger" type="button">
+              清空購物車
+            </button>
+          </div>
+          <div>
+            {{ cartData}}
+
           </div>
           <table class="table align-middle">
             <thead>
@@ -86,32 +99,42 @@
               </tr>
             </thead>
             <tbody>
+              <!-- 購物車資料有沒有存在 -->
+              <!-- 購物車資料不存在時，會導致資料不存在 -->
               <template v-if="cartData.carts">
-                <tr>
+                <tr v-for="item in catData.carts" :ket="item.id">
                   <td>
-                    <button type="button" class="btn btn-outline-danger btn-sm">
-                      <i class="fas fa-spinner fa-pulse"></i>
-                      x
+                    <button type="button" class="btn btn-outline-danger btn-sm"
+                    @click="removeCartItem(item.id)">                      x
                     </button>
                   </td>
                   <td>
-                    {{  }}
-                    <div class="text-success">
+                    {{ item.product.title }}
+                    <!-- <div class="text-success">
                       已套用優惠券
-                    </div>
+                    </div> -->
                   </td>
                   <td>
                     <div class="input-group input-group-sm">
                       <div class="input-group mb-3">
-                        <input 
-                             min="1" type="number" class="form-control">
-                        <span class="input-group-text" id="basic-addon2">{{  }}</span>
+                        <!-- <input min="1" type="number" class="form-control" v-mpdel="item.qty"> -->
+                        <select id="" class="form-select" 
+                           v-model="item.qty"
+                           @change="updateCartItem(item)"
+                           :disabled="isLoadingItem === item.id"     
+                          >
+                          <option value="" v-for="num in 20" 
+                            :key="`${num}${item.id}`"
+                            :selected="item.qty === num">{{ num }}</option>
+                                  <!-- 判斷購物車數量的值 -->
+                        </select>
+                        <span class="input-group-text" id="basic-addon2"
+                          >{{ item.product.unit  }}</span>
                       </div>
                     </div>
                   </td>
                   <td class="text-end">
-                    <small class="text-success">折扣價：</small>
-                    {{  }}
+                    {{ item.total }}
                   </td>
                 </tr>
               </template>
@@ -119,21 +142,22 @@
             <tfoot>
               <tr>
                 <td colspan="3" class="text-end">總計</td>
-                <td class="text-end">{{   }}</td>
+                <td class="text-end">{{  cartData.total }}</td>
               </tr>
               <tr>
                 <td colspan="3" class="text-end text-success">折扣價</td>
-                <td class="text-end text-success">{{   }}</td>
+                <td class="text-end text-success">{{ cartData.final_total  }}</td>
               </tr>
             </tfoot>
           </table>
         </div>
         <div class="my-5 row justify-content-center">
-          <!-- <v-form ref="form" class="col-md-6" v-slot="{ errors }" >
+           <v-form ref="form" class="col-md-6" v-slot="{ errors }" @submit="createOrder" >
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
               <v-field id="email" name="email" type="email" class="form-control"
-                       :class="{ 'is-invalid': errors['email'] }" placeholder="請輸入 Email" 
+                       :class="{ 'is-invalid': errors['email'] }" placeholder="請輸入 Email"
+                       rules="email|required" 
                       ></v-field>
               <error-message name="email" class="invalid-feedback"></error-message>
             </div>
@@ -148,7 +172,7 @@
             <div class="mb-3">
               <label for="tel" class="form-label">收件人電話</label>
               <v-field id="tel" name="電話" type="text" class="form-control" :class="{ 'is-invalid': errors['電話'] }"
-                       placeholder="請輸入電話" ></v-field>
+                       placeholder="請輸入電話" rules="required|min:8|max:10" ></v-field>
               <error-message name="電話" class="invalid-feedback"></error-message>
             </div>
 
@@ -167,7 +191,7 @@
               <button type="submit" class="btn btn-danger"
                       >送出訂單</button>
             </div>
-          </v-form> -->
+          </v-form>
         </div>
       </div>
     </div>
@@ -198,8 +222,12 @@
             <div>
               <div class="input-group">
                 <input type="number" class="form-control"
-                       min="1">
-                <button type="button" class="btn btn-primary">加入購物車</button>
+                       min="1" 
+                      v-model="qty" />
+                <button type="button" class="btn btn-primary"
+                  @clicl="addToCart">
+                  加入購物車
+                </button>
       </div>
       </div>
       </div>
