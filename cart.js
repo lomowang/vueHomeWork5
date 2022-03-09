@@ -33,6 +33,18 @@ const app = Vue.createApp({
       products: [],
       productId: '',
       isLoadingItem:'',
+      form: {
+          user: {
+              name: '',
+              email: '',
+              tel: '',
+              address: '',
+          },
+          message: '',
+      },
+      cart:{
+        carts:[]
+      },
     };
   },
   components: {
@@ -84,6 +96,13 @@ const app = Vue.createApp({
         this.getCart();
         this.isLoadingItem= '';
       });
+    },
+    deleteAllCarts() {
+        axios.delete(`${apiUrl}/api/${apiPath}/carts`)
+          .then((res) => {
+              console.log(res);
+              this.getCart();
+          })
     },
     updateCartItem(item)  {
       const data = {
